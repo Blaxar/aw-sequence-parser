@@ -1,0 +1,38 @@
+{
+  "name": "aw-sequence-parser",
+  "version": "0.1.0",
+  "description": "Javascript parser for Active Worlds (AW) sequence files",
+  "type": "module",
+  "main": "src/AWSequenceLoader.js",
+  "scripts": {
+    "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
+    "lint": "eslint src/*.js"
+  },
+  "devDependencies": {
+    "eslint": "^8.7.0",
+    "eslint-plugin-jest": "^26.0.0",
+    "jest": "^27.4.7"
+  },
+  "peerDependencies": {
+    "jszip": "^3.6.0",
+    "jszip-utils": "^0.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Blaxar/aw-sequence-parser"
+  },
+  "keywords": [
+    "sequence",
+    "rwx",
+    "Active",
+    "Worlds",
+    "RenderWare",
+    "Script"
+  ],
+  "author": "Julien 'Blaxar' Bardagi <blaxar.waldarax@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Blaxar/aw-sequence-parser/issues"
+  },
+  "homepage": "https://github.com/Blaxar/aw-sequence-parser#readme"
+}
