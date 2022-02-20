@@ -76,6 +76,39 @@ function contentMatch(base, i, pattern) {
     return ret;
 }
 
+function spawnFrameObject() {
+    return {joints: {}, location: [0.0, 0.0, 0.0]};
+}
+
+function parseBinaryLocationBlock(fileContent, i, frames, locId) {
+    const iteLength = (fileContent[i++] << 24) + (fileContent[i++] << 16) + (fileContent[i++] << 8) + fileContent[i++];
+
+    if (iteLength != 4) {
+        throw('Unexpected data length for each locationX iteration');
+    }
+
+    // Get the number of frames in this block
+    const nFrames = (fileContent[i++] << 24) + (fileContent[i++] << 16) + (fileContent[i++] << 8) + fileContent[i++];
+
+    for (let frameId = 0; frameId < nFrames; frameId++) {
+        // Get the frame number
+        const frameNb = (fileContent[i++] << 24) + (fileContent[i++] << 16) + (fileContent[i++] << 8) + fileContent[i++];
+
+        const floatView = new DataView(new ArrayBuffer(4));
+
+        floatView.setInt32(0, (fileContent[i++] << 24) + (fileContent[i++] << 16) + (fileContent[i++] << 8) + fileContent[i++]);
+        const loc = floatView.getFloat32(0);
+
+        if (frames[frameNb] === undefined) {
+            frames[frameNb] = spawnFrameObject();
+        }
+
+        frames[frameNb].location[locId] = loc;
+    }
+
+    return i;
+}
+
 /* exported parseBinarySequence */
 async function parseBinarySequence(fileContent) {
     let headerMissing = true;
@@ -139,6 +172,8 @@ async function parseBinarySequence(fileContent) {
         const jointName = String.fromCharCode(...fileContent.slice(i,i+jointNameLength-1));
         i += jointNameLength;
 
+        const jointTag = RWXtag[jointName.toUpperCase()];
+
         // Look for the data length of each iteration, we expect 16 bytes (4 floats) for a quaternion
         // Note: this data length seems to not include the 4-bytes integer for the frame number in each
         //       iteration
@@ -170,15 +205,39 @@ async function parseBinarySequence(fileContent) {
             floatView.setInt32(0, (fileContent[i++] << 24) + (fileContent[i++] << 16) + (fileContent[i++] << 8) + fileContent[i++]);
             const qZ = floatView.getFloat32(0);
 
-            if (frames[frameNb] === undefined) {
-                frames[frameNb] = {};
+            if (jointTag === undefined)
+            {
+                // Unknown joint name, skipping
+                continue;
             }
 
-            frames[frameNb][RWXtag[jointName.toUpperCase()]] = [qW, qX, qY, qZ];
+            if (frames[frameNb] === undefined) {
+                frames[frameNb] = spawnFrameObject();
+            }
+
+            frames[frameNb].joints[jointTag] = [qW, qX, qY, qZ];
         }
     }
 
-    return { totalNFrames, nJoints, modelName, rootJointTag, frames };
+    // Check if there are other information blocks
+    const nBlocks = (fileContent[i++] << 24) + (fileContent[i++] << 16) + (fileContent[i++] << 8) + fileContent[i++];
+
+    if (nBlocks > 0) {
+        // Parse locationX block
+        i = parseBinaryLocationBlock(fileContent, i, frames, 0);
+    }
+
+    if (nBlocks > 1) {
+        // Parse locationY block
+        i = parseBinaryLocationBlock(fileContent, i, frames, 1);
+    }
+
+    if (nBlocks > 2) {
+        // Parse locationZ block
+        i = parseBinaryLocationBlock(fileContent, i, frames, 2);
+    }
+
+    return {totalNFrames, nJoints, modelName, rootJointTag, frames};
 }
 
 /* exported parseSequence */
