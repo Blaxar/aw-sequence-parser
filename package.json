@@ -1,9 +1,9 @@
 {
   "name": "aw-sequence-parser",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Javascript parser for Active Worlds (AW) sequence files",
   "type": "module",
-  "main": "src/AWSequenceLoader.js",
+  "main": "src/AWSequenceParser.js",
   "scripts": {
     "test": "NODE_OPTIONS=--experimental-vm-modules npx jest",
     "lint": "eslint src/*.js"
