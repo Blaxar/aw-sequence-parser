@@ -59,6 +59,11 @@ const RWXtag = {
 
 const headerPatterns = [[0x7f, 0x7f, 0x7f, 0x79], [0x7f, 0x7f, 0x7f, 0x7a]];
 
+/* exported getJointTag */
+function getJointTag(jointName) {
+    return RWXtag[jointName.toUpperCase()];
+}
+
 function contentMatch(base, i, pattern) {
     let ret, start = i;
 
@@ -156,8 +161,6 @@ async function parseBinarySequence(fileContent) {
     const rootJointName = String.fromCharCode(...fileContent.slice(i,i+rootJointNameLength-1));
     i += rootJointNameLength;
 
-    const rootJointTag = RWXtag[rootJointName.toUpperCase()];
-
     const frames = {};
 
     // Start iterating over each joint, we expect 'nJoints' iterations
@@ -171,8 +174,6 @@ async function parseBinarySequence(fileContent) {
         
         const jointName = String.fromCharCode(...fileContent.slice(i,i+jointNameLength-1));
         i += jointNameLength;
-
-        const jointTag = RWXtag[jointName.toUpperCase()];
 
         // Look for the data length of each iteration, we expect 16 bytes (4 floats) for a quaternion
         // Note: this data length seems to not include the 4-bytes integer for the frame number in each
@@ -205,17 +206,11 @@ async function parseBinarySequence(fileContent) {
             floatView.setInt32(0, (fileContent[i++] << 24) + (fileContent[i++] << 16) + (fileContent[i++] << 8) + fileContent[i++]);
             const qZ = floatView.getFloat32(0);
 
-            if (jointTag === undefined)
-            {
-                // Unknown joint name, skipping
-                continue;
-            }
-
             if (frames[frameNb] === undefined) {
                 frames[frameNb] = spawnFrameObject();
             }
 
-            frames[frameNb].joints[jointTag] = [qW, qX, qY, qZ];
+            frames[frameNb].joints[jointName] = [qW, qX, qY, qZ];
         }
     }
 
@@ -237,7 +232,7 @@ async function parseBinarySequence(fileContent) {
         i = parseBinaryLocationBlock(fileContent, i, frames, 2);
     }
 
-    return {totalNFrames, nJoints, modelName, rootJointTag, frames};
+    return {fileType: 'binary', totalNFrames, nJoints, modelName, rootJointName, frames};
 }
 
 /* exported parseSequence */
@@ -276,4 +271,4 @@ async function parseSequence(uri, opts = {fileType: FileType.AUTO, jsZip: null, 
 }
 
 export default parseSequence;
-export {FileType, RWXtag, parseBinarySequence};
+export {FileType, RWXtag, parseBinarySequence, getJointTag};
