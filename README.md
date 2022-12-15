@@ -11,12 +11,12 @@ If nothing is provided, `opts` will hold the following values:
 ```javascript
 {
   fileType: FileType.AUTO, // Auto detect file type (WIP)
-  jsZip: null,             // jsZip utility, mandatory to extract zipped sequences
-  jsZipUtils: null         // Same as above
+  fflate: null,            // fflate module, mandatory to extract zipped sequences
+  cors: false              // Set to 'true' to enable CORS policy on http(s) request
 }
 ```
 
-In practice: it's highly recommended to provide such `opts` dictionary with jsZip(Utils) set, as zipped binary sequence files are usually the default way to go for AW object paths.
+In practice: it's highly recommended to provide such `opts` dictionary with fflate set, as zipped binary sequence files are usually the default way to go for AW object paths.
 
 `parseSequence` will return the Promise of a dictionary for the freshly-parsed sequence file:
 
@@ -61,14 +61,13 @@ If the joint name is invalid: it will return `undefined`.
 
 ```javascript
 import parseSequence, {FileType, getJointTag} from 'aw-sequence-parser';
-import * as JSZip from 'jszip';
-import JSZipUtils from 'jszip-utils';
+import * as fflate from 'fflate';
 
 walkSeqPath = 'http://objects.activeworlds.com/uberpath/seqs/walk.zip';
 
 const seqPromise = parseSequence(walkSeqPath, { fileType: FileType.AUTO,
-                                                jsZip: JSZip,
-                                                jsZipUtils: JSZipUtils });
+                                                fflate,
+                                                core: true });
 
 seqPromise.then( seq => { /* Handle sequence here */ });
 
